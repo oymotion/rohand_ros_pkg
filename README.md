@@ -6,9 +6,9 @@ Nodes for ROHand. One bus, i.e. one port need one node.
 
 ```BASH
 cd ~
-mkdir -p ros2_ws/src
-cd ros2_ws/src
-git clone ssh://git@github.com/oymotion/rohand_ros2_pkg
+mkdir -p ros_ws/src
+cd ros_ws/src
+git clone ssh://git@github.com/oymotion/rohand_ros_pkg
 ```
 
 ## 2. Prepare
@@ -16,7 +16,7 @@ git clone ssh://git@github.com/oymotion/rohand_ros2_pkg
 Install pymodbus
 
 ```BASH
-cd /path/to/workspace  # Should be ~/ros2_ws/src
+cd /path/to/workspace  # Should be ~/ros_ws/src
 
 # Create a vertual env for python
 virtualenv -p python3 ./venv
@@ -34,7 +34,7 @@ python3 -m pip install pymodbus
 Edit `~/bashrc` and add virtual env lib path to PYTHONPATH
 
 ```BASH
-export PYTHONPATH=$PYTHONPATH:~/ros2_ws/src/venv/lib/python3.12/site-packages  # Modify python3.12 to your actual versioni
+export PYTHONPATH=$PYTHONPATH:~/ros_ws/src/venv/lib/python3.12/site-packages  # Modify python3.12 to your actual versioni
 source ~/.bashrc
 ```
 
@@ -68,7 +68,7 @@ source /path/to/workspace/install/bash
 sudo chmod o+rw /dev/ttyUSB0  # Modify ttyUSB0 to your actual device name
 
 # Run node
-ros2 run rohand rohand --ros-args -p port_name:="/dev/ttyUSB0" -p baudrate:=115200 -p hand_ids:=[2,3]  # Modify parameters according to your real case
+ros run rohand rohand --ros-args -p port_name:="/dev/ttyUSB0" -p baudrate:=115200 -p hand_ids:=[2,3]  # Modify parameters according to your real case
 ```
 
 ## 5. Node rohand_serial
@@ -95,7 +95,7 @@ source /path/to/workspace/install/bash
 sudo chmod o+rw /dev/ttyUSB0  # Modify ttyUSB0 to your actual device name
 
 # Run node
-ros2 run rohand rohand_serial --ros-args -p port_name:="/dev/ttyUSB0" -p baudrate:=115200 -p hand_ids:=[2,3]  # Modify parameters according to your real case
+ros run rohand rohand_serial --ros-args -p port_name:="/dev/ttyUSB0" -p baudrate:=115200 -p hand_ids:=[2,3]  # Modify parameters according to your real case
 ```
 
 Finger status code:
@@ -126,7 +126,7 @@ Reads keys to modify target joint angles, then publish to 'target_joint_state'.
 source /path/to/workspace/install/bash
 
 # Run node
-ros2 run rohand rohand_teleop --ros-args -r rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states -p hand_id:=2  # Modify parameters according to your real case
+ros run rohand rohand_teleop --ros-args -r rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states -p hand_id:=2  # Modify parameters according to your real case
 ```
 
 Press following keys to operate:
