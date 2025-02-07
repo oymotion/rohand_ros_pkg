@@ -21,9 +21,6 @@ cd /path/to/workspace  # Should be ~/ros_ws/src
 # Create a vertual env for python
 virtualenv -p python3 ./venv
 
-# Make sure that colcon doesn’t try to build the venv
-touch ./venv/COLCON_IGNORE
-
 # Activate
 source ./venv/bin/activate
 
@@ -42,7 +39,7 @@ source ~/.bashrc
 
 ```BASH
 cd /path/to/workspace
-colcon build
+catkin build
 ```
 
 ## 4. Node rohand
@@ -68,7 +65,7 @@ source /path/to/workspace/install/bash
 sudo chmod o+rw /dev/ttyUSB0  # Modify ttyUSB0 to your actual device name
 
 # Run node
-ros run rohand rohand --ros-args -p port_name:="/dev/ttyUSB0" -p baudrate:=115200 -p hand_ids:=[2,3]  # Modify parameters according to your real case
+ros run rohand rohand _port_name:="/dev/ttyUSB0" _baudrate:=115200 _hand_ids:=[2,3]  # Modify parameters according to your real case
 ```
 
 ## 5. Node rohand_serial
@@ -95,7 +92,7 @@ source /path/to/workspace/install/bash
 sudo chmod o+rw /dev/ttyUSB0  # Modify ttyUSB0 to your actual device name
 
 # Run node
-ros run rohand rohand_serial --ros-args -p port_name:="/dev/ttyUSB0" -p baudrate:=115200 -p hand_ids:=[2,3]  # Modify parameters according to your real case
+ros run rohand rohand_serial _port_name:="/dev/ttyUSB0" _baudrate:=115200 _hand_ids:=[2,3]  # Modify parameters according to your real case
 ```
 
 Finger status code:
@@ -126,7 +123,7 @@ Reads keys to modify target joint angles, then publish to 'target_joint_state'.
 source /path/to/workspace/install/bash
 
 # Run node
-ros run rohand rohand_teleop --ros-args -r rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states -p hand_id:=2  # Modify parameters according to your real case
+ros run rohand rohand_teleop rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states _hand_id:=2  # Modify parameters according to your real case
 ```
 
 Press following keys to operate:
