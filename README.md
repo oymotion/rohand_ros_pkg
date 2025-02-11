@@ -1,6 +1,6 @@
 # Package ROHand
 
-Nodes for ROHand. One bus, i.e. one port need one node.
+ROS nodes for ROHand. One bus, i.e. one port need one node.
 
 ## 1. Clone
 
@@ -16,10 +16,13 @@ git clone ssh://git@github.com/oymotion/rohand_ros_pkg
 Install pymodbus
 
 ```BASH
-cd /path/to/workspace  # Should be ~/ros_ws/src
+cd /path/to/workspace  # Should be ~/ros_ws
 
 # Create a vertual env for python
 virtualenv -p python3 ./venv
+
+# Make sure that catkin doesn’t try to build the venv
+touch ./venv/CATKIN_IGNORE
 
 # Activate
 source ./venv/bin/activate
@@ -31,7 +34,7 @@ python3 -m pip install pymodbus
 Edit `~/bashrc` and add virtual env lib path to PYTHONPATH
 
 ```BASH
-export PYTHONPATH=$PYTHONPATH:~/ros_ws/src/venv/lib/python3.12/site-packages  # Modify python3.12 to your actual versioni
+export PYTHONPATH=$PYTHONPATH:~/ros_ws/venv/lib/python3.8/site-packages  # Modify python3.8 to your actual versioni
 source ~/.bashrc
 ```
 
@@ -39,38 +42,18 @@ source ~/.bashrc
 
 ```BASH
 cd /path/to/workspace
-catkin build
+catkin_make
 ```
 
-## 4. Node rohand
-
-ROHand node for ModBus-RTU or ModBus-RTU & SerialCtrl Dual Protocol. Please confirm protocol type in OHandSetting.
-Listens to topic 'target_joint_state' and controls ROHand, reads current joint state and publish to 'current_joint_state'.
-
-### 4.1 Topics
-
-| Topic                 | Description                                                                              |
-| --------------------- | ---------------------------------------------------------------------------------------- |
-| "current_joint_state" | current joint state in message type JointState, frame_id in header distinguishes hand id |
-| "target_joint_state"  | target joint state in message type JointState, frame_id in header distinguishes hand id  |
-
-### 4.2 Run
+## 4. Launch roscore
 
 ```BASH
-# Prepare package
-source /path/to/workspace/install/bash
-
-# Insert USB-485 module to USB port then add permission to users
-# Run following command every time you plug in your USB-485 module
-sudo chmod o+rw /dev/ttyUSB0  # Modify ttyUSB0 to your actual device name
-
-# Run node
-ros run rohand rohand _port_name:="/dev/ttyUSB0" _baudrate:=115200 _hand_ids:=[2,3]  # Modify parameters according to your real case
+roscore
 ```
 
-## 5. Node rohand_serial
+## 5. Node rohand
 
-ROHand node for SerialCtrl Protocol, Dual Protocol is NOT supported. Please confirm protocol type in OHandSetting.
+ROHand node for ModBus-RTU or ModBus-RTU & SerialCtrl Dual Protocol. Please confirm protocol type in OHandSetting.
 Listens to topic 'target_joint_state' and controls ROHand, reads current joint state and publish to 'current_joint_state'.
 
 ### 5.1 Topics
@@ -79,20 +62,46 @@ Listens to topic 'target_joint_state' and controls ROHand, reads current joint s
 | --------------------- | ---------------------------------------------------------------------------------------- |
 | "current_joint_state" | current joint state in message type JointState, frame_id in header distinguishes hand id |
 | "target_joint_state"  | target joint state in message type JointState, frame_id in header distinguishes hand id  |
-| "finger_state"        | finger status in message type UInt8MultiArray                                            |
 
 ### 5.2 Run
 
 ```BASH
-# Prepare package
-source /path/to/workspace/install/bash
+# Open a new terminal to prepare package
+source /path/to/workspace/devel/bash
 
 # Insert USB-485 module to USB port then add permission to users
 # Run following command every time you plug in your USB-485 module
 sudo chmod o+rw /dev/ttyUSB0  # Modify ttyUSB0 to your actual device name
 
 # Run node
-ros run rohand rohand_serial _port_name:="/dev/ttyUSB0" _baudrate:=115200 _hand_ids:=[2,3]  # Modify parameters according to your real case
+rosrun rohand rohand.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2,3] # Modify parameters according to your real case
+```
+
+## 6. Node rohand_serial
+
+ROHand node for SerialCtrl Protocol, Dual Protocol is NOT supported. Please confirm protocol type in OHandSetting.
+Listens to topic 'target_joint_state' and controls ROHand, reads current joint state and publish to 'current_joint_state'.
+
+### 6.1 Topics
+
+| Topic                 | Description                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| "current_joint_state" | current joint state in message type JointState, frame_id in header distinguishes hand id |
+| "target_joint_state"  | target joint state in message type JointState, frame_id in header distinguishes hand id  |
+| "finger_state"        | finger status in message type UInt8MultiArray                                            |
+
+### 6.2 Run
+
+```BASH
+# Open a new terminal to prepare package
+source /path/to/workspace/devel/bash
+
+# Insert USB-485 module to USB port then add permission to users
+# Run following command every time you plug in your USB-485 module
+sudo chmod o+rw /dev/ttyUSB0  # Modify ttyUSB0 to your actual device name
+
+# Run node
+rosrun rohand rohand_serial.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2,3]  # Modify parameters according to your real case
 ```
 
 Finger status code:
@@ -106,24 +115,24 @@ Finger status code:
 | STATUS_FORCE_REACHED |   4   | Force control reached stop |
 | STATUS_STUCK         |   5   | Motor stuck stop           |
 
-## 6. Node rohand_teleop
+## 7. Node rohand_teleop
 
 Reads keys to modify target joint angles, then publish to 'target_joint_state'.
 
-### 6.1 Topics
+### 7.1 Topics
 
 | Topic                | Description                                                                             |
 | -------------------- | --------------------------------------------------------------------------------------- |
 | "target_joint_state" | target joint state in message type JointState, frame_id in header distinguishes hand id |
 
-### 6.2 Run
+### 7.2 Run
 
 ```BASH
-# Prepare package
-source /path/to/workspace/install/bash
+# Open a new terminal to prepare package
+source /path/to/workspace/devel/bash
 
 # Run node
-ros run rohand rohand_teleop rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states _hand_id:=2  # Modify parameters according to your real case
+rosrun rohand rohand_teleop.py _rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states _hand_id:=2  # Modify parameters according to your real case
 ```
 
 Press following keys to operate:

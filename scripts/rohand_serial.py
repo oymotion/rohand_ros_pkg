@@ -3,41 +3,27 @@
 import time
 import traceback
 import serial
-
+import threading
 import rospy
 from sensor_msgs.msg import JointState
 from std_msgs.msg import UInt8MultiArray
-from sensor_msgs.msg import JointState
-from std_msgs.msg import UInt8MultiArray
-
 from common.rohand_serial_protocol import *
 
-
 FRAME_ID_PREFIX = "rohand_"
-
 PUB_RATE = 30  # Hz
 
 
-class ROHandSerialNode(Node):
-
+class ROHandSerialNode:
     def __init__(self):
-        super().__init__("rohand_node")
+        rospy.init_node("rohand_node")  # Initialize ROS node
 
-        self.get_logger().info("node %s init.." % self.get_name())
+        rospy.loginfo("node %s init.." % rospy.get_name())
 
-        self.declare_parameters(
-            namespace="",
-            parameters=[
-                ("port_name", Parameter.Type.STRING),
-                ("baudrate", Parameter.Type.INTEGER),
-                ("hand_ids", Parameter.Type.INTEGER_ARRAY),
-            ],
-        )
-
-        self.port_name_ = self.get_parameter_or("port_name", Parameter("port_name", Parameter.Type.STRING, "/dev/ttyUSB0")).value
-        self.baudrate_ = self.get_parameter_or("baudrate", Parameter("baudrate", Parameter.Type.INTEGER, 115200)).value
-        self.hand_ids_ = self.get_parameter_or("hand_ids", Parameter("hand_ids", Parameter.Type.INTEGER_ARRAY, [2])).value
-        self.get_logger().info("port: %s, baudrate: %d, hand_ids: %s" % (self.port_name_, self.baudrate_, str(self.hand_ids_)))
+        # Declare parameters
+        self.port_name_ = rospy.get_param('port_name', '/dev/ttyUSB0')
+        self.baudrate_ = rospy.get_param('baudrate', 115200)
+        self.hand_ids_ = rospy.get_param('hand_ids', [2])
+        rospy.loginfo("port: %s, baudrate: %d, hand_ids: %s" % (self.port_name_, self.baudrate_, str(self.hand_ids_)))
 
         self.position_ = []
         self.velocity_ = []
@@ -57,46 +43,51 @@ class ROHandSerialNode(Node):
         if not serial_port.is_open:
             serial_port.open()
 
-        self.get_logger().info(f"serial port '{self.port_name_}' opened: {serial_port.is_open}")
+        rospy.loginfo(f"serial port '{self.port_name_}' opened: {serial_port.is_open}")
 
-        # 创建并初始化发布者成员属性pub_joint_states_
-        self.joint_states_subscriber_ = self.create_subscription(
-            msg_type=JointState, topic="~/target_joint_states", callback=self._joint_states_callback, qos_profile=10
+        # Create subscribers and publishers
+        self.joint_states_subscriber_ = rospy.Subscriber(
+            "~/target_joint_states", JointState, self._joint_states_callback
         )
 
-        # 创建并初始化发布者成员属性pub_joint_states_
-        self.joint_states_publisher_ = self.create_publisher(msg_type=JointState, topic="~/current_joint_states", qos_profile=10)
-        
-        # 创建并初始化发布者成员属性pub_finger_states_
-        self.finger_states_publihser_ = self.create_publisher(msg_type=UInt8MultiArray, topic="~/finger_state", qos_profile=10)
+        self.joint_states_publisher_ = rospy.Publisher(
+            "~/current_joint_states", JointState, queue_size=10
+        )
 
-        # 初始化数据
-        # self._init_joint_states()
-        self.pub_rate = self.create_rate(PUB_RATE)
+        self.finger_states_publihser_ = rospy.Publisher(
+            "~/finger_state", UInt8MultiArray, queue_size=10
+        )
+
+        self.pub_rate = rospy.Rate(PUB_RATE)
 
         # Initialize bus context
         rohand_ctx = OHandContext(serial=serial_port, timeout=200)
         self.rohand_protocol = OHandProtocol(rohand_ctx)
 
+        # Check protocol version for each hand
         for i in range(10):
             matched_cnt = 0
+
+            if rospy.is_shutdown():
+                rospy.loginfo("Shutting down node...")
+                break
 
             for hand_id in self.hand_ids_:
                 try:
                     err, remote_err, major, minor = self.rohand_protocol.get_protocol_version(hand_id)
                 except Exception as exc:
                     traceback.print_exc()
-                    self.get_logger().error(f"exception occurred when calling get_protocol_version(): {exc}")
+                    rospy.logerr(f"exception occurred when calling get_protocol_version(): {exc}")
                     continue
 
                 if err != HAND_RESP_SUCCESS:
-                    self.get_logger().error(f"get_protocol_version() returned an error: {err}")
+                    rospy.logerr(f"get_protocol_version() returned an error: {err}")
                     continue
 
                 if major == PROTOCOL_VERSION_MAJOR:
                     matched_cnt += 1
                 else:
-                    self.get_logger().error(
+                    rospy.logerr(
                         f"major protocol version of rohand '{hand_id}' is '{major}', expected '{PROTOCOL_VERSION_MAJOR}'"
                     )
                     raise Exception("Protocol version NOT matched")
@@ -113,14 +104,14 @@ class ROHandSerialNode(Node):
         self.thread_.start()
 
     def _joint_states_callback(self, msg):
-        self.get_logger().info("I heard: %s" % msg)
+        rospy.loginfo("I heard: %s" % msg)
 
         try:
             hand_id = int(msg.header.frame_id.replace(FRAME_ID_PREFIX, ""))
         except ValueError as e:
             hand_id = -1
 
-        self.get_logger().info("hand_id: %d" % hand_id)
+        rospy.loginfo("hand_id: %d" % hand_id)
 
         try:
             index = self.hand_ids_.index(hand_id)
@@ -141,13 +132,12 @@ class ROHandSerialNode(Node):
                 self.status_ = status
 
     def _thread_pub(self):
-
-        while rospy.ok():
+        while not rospy.is_shutdown():
             for hand_id in self.hand_ids_:
                 joint_states = JointState()
                 finger_states = UInt8MultiArray()
 
-                joint_states.header.stamp = self.get_clock().now().to_msg()
+                joint_states.header.stamp = rospy.Time.now()
                 joint_states.header.frame_id = FRAME_ID_PREFIX + str(hand_id)
                 joint_states.name = ["thumb", "index", "middle", "ring", "little", "thumb_rotation"]
 
@@ -162,9 +152,9 @@ class ROHandSerialNode(Node):
                     joint_states.position = angle if angle is not None else []
                     joint_states.velocity = []  # TODO: Calculate speed according to position diff and time
                     joint_states.effort = force if force is not None else []
-                    
+
                     finger_states.data = status
-                    
+
                 else:
                     # Use still fresh data
                     joint_states.position = self.position_
@@ -172,23 +162,21 @@ class ROHandSerialNode(Node):
                     joint_states.effort = self.effort_
                     finger_states.data = self.status_
 
-                # 更新 header
-                joint_states.header.stamp = self.get_clock().now().to_msg()
+                joint_states.header.stamp = rospy.Time.now()
 
-                # 发布关节数据
+                # Publish joint data
                 self.joint_states_publisher_.publish(joint_states)
-                
-                # 发布手指状态数据
+
+                # Publish finger state data
                 self.finger_states_publihser_.publish(finger_states)
 
             self.pub_rate.sleep()
 
 
-def main(args=None):
-    rospy.init_node('rohand_serial_node')
+if __name__ == '__main__':
+    node = ROHandSerialNode()  # Create a node instance
 
-    node = ROHandSerialNode()  # 新建一个节点
+    rospy.spin()  # Keep the node running, waiting for any exit signal (Ctrl+C)
 
-    rospy.spin(node)  # 保持节点运行，检测是否收到退出指令（Ctrl+C）
-    node.destroy_node()
-    rospy.shutdown()  # 关闭rospy
+    rospy.signal_shutdown("shutdown")  # Shut down ROS when done
+
