@@ -13,12 +13,8 @@ catkin_package(
   CATKIN_DEPENDS rospy sensor_msgs std_msgs  # 这里列出包的依赖
 )
 
-# 安装脚本和其他资源：
-
-# 安装依赖脚本
-install(DIRECTORY common/
-  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}/common
-)
+# 启用配置文件
+catkin_python_setup()
 
 # 获取scripts下python脚本
 file(GLOB PYTHON_SCRIPTS
