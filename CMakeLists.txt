@@ -18,9 +18,9 @@ catkin_python_setup()
 
 # 获取scripts下python脚本
 file(GLOB PYTHON_SCRIPTS
-  "scripts/rohand.py"
-  "scripts/rohand_serial.py"
-  "scripts/rohand_teleop.py"
+  "scripts/roh_a001_node/*.py"
+  "scripts/roh_ap001_node/*.py"
+  "scripts/roh_lites001_node/*.py"
 )
 
 #安装脚本

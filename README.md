@@ -51,7 +51,7 @@ catkin_make
 roscore
 ```
 
-## 5. Node rohand
+## 5. Node rohand_modbus
 
 ROHand node for ModBus-RTU or ModBus-RTU & SerialCtrl Dual Protocol. Please confirm protocol type in OHandSetting.
 Listens to topic 'target_joint_state' and controls ROHand, reads current joint state and publish to 'current_joint_state'.
@@ -73,8 +73,16 @@ source /path/to/workspace/devel/bash
 # Run following command every time you plug in your USB-485 module
 sudo chmod o+rw /dev/ttyUSB0  # Modify ttyUSB0 to your actual device name
 
-# Run node
-rosrun rohand rohand.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2,3] # Modify parameters according to your real case
+# Run ROHand node according to your type
+#
+# Run ROH-A001 node
+rosrun rohand rohand_modbus_a001.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2] # Modify parameters according to your real case
+
+# Run ROH-AP001 node
+rosrun rohand rohand_modbus_ap001.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2] # Modify parameters according to your real case
+
+# Run ROH-LiteS001 node
+rosrun rohand rohand_modbus_lites001.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2] # Modify parameters according to your real case
 ```
 
 ## 6. Node rohand_serial
@@ -100,8 +108,16 @@ source /path/to/workspace/devel/bash
 # Run following command every time you plug in your USB-485 module
 sudo chmod o+rw /dev/ttyUSB0  # Modify ttyUSB0 to your actual device name
 
-# Run node
-rosrun rohand rohand_serial.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2,3]  # Modify parameters according to your real case
+# Run ROHand node according to your type
+#
+# Run ROH-A001 node
+rosrun rohand rohand_serial_a001.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2] # Modify parameters according to your real case
+
+# Run ROH-AP001 node
+rosrun rohand rohand_serial_ap001.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2] # Modify parameters according to your real case
+
+# Run ROH-LiteS001 node
+rosrun rohand rohand_serial_lites001.py _port_name:=/dev/ttyUSB0 _baudrate:=115200 _hand_ids:=[2] # Modify parameters according to your real case
 ```
 
 Finger status code:
@@ -133,6 +149,17 @@ source /path/to/workspace/devel/bash
 
 # Run node
 rosrun rohand rohand_teleop.py _rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states _hand_id:=2  # Modify parameters according to your real case
+
+# Run ROHand node according to your type
+#
+# Run ROH-A001 node
+rosrun rohand rohand_teleop_a001.py _rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states _hand_id:=2  # Modify parameters according to your real case
+
+# Run ROH-AP001 node
+rosrun rohand rohand_teleop_ap001.py _rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states _hand_id:=2  # Modify parameters according to your real case
+
+# Run ROH-LiteS001 node
+rosrun rohand rohand_teleop_lites001.py _rohand_teleop_node/target_joint_states:=/rohand_node/target_joint_states _hand_id:=2  # Modify parameters according to your real case
 ```
 
 Press following keys to operate:

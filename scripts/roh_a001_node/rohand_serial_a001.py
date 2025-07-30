@@ -7,7 +7,7 @@ import threading
 import rospy
 from sensor_msgs.msg import JointState
 from std_msgs.msg import UInt8MultiArray
-from common.rohand_serial_protocol import *
+from common.rohand_serial_protocol_v1 import *
 
 FRAME_ID_PREFIX = "rohand_"
 PUB_RATE = 30  # Hz
