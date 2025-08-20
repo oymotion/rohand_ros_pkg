@@ -138,22 +138,22 @@ class ROHandNode:
                 # 读取当前速度
                 joint_states.velocity = []
 
-                # 读取当前力量
-                try:
-                    self.bus_mutex.acquire()
-                    rr = self.modbus_client_.read_holding_registers(ROH_FINGER_FORCE0, count=6, slave=hand_id)
-                    self.bus_mutex.release()
-                except ModbusException as exc:
-                    rospy.logerr(f"ERROR: exception in pymodbus {exc}")
-                    time.sleep(1.0)
-                    continue
+                # 读取当前力量, 保留
+                # try:
+                #     self.bus_mutex.acquire()
+                #     rr = self.modbus_client_.read_holding_registers(ROH_FINGER_FORCE0, count=6, slave=hand_id)
+                #     self.bus_mutex.release()
+                # except ModbusException as exc:
+                #     rospy.logerr(f"ERROR: exception in pymodbus {exc}")
+                #     time.sleep(1.0)
+                #     continue
 
-                if rr.isError():
-                    rospy.logerr(f"ERROR: pymodbus read_holding_registers() returned an error: ({rr})")
-                else:
-                    for i in range(len(rr.registers)):
-                        value = rr.registers[i]
-                        joint_states.effort.append(value)
+                # if rr.isError():
+                #     rospy.logerr(f"ERROR: pymodbus read_holding_registers() returned an error: ({rr})")
+                # else:
+                #     for i in range(len(rr.registers)):
+                #         value = rr.registers[i]
+                #         joint_states.effort.append(value)
 
                 # 发布关节数据
                 self.joint_states_publisher_.publish(joint_states)
